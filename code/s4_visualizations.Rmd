@@ -1,0 +1,301 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r library}
+library(ggplot2)
+library(reshape2)
+library("alluvial")
+library(readxl)
+library(dplyr)
+library(ggsignif)
+```
+
+```{r Fig_3_a}
+com <- read_excel("../results/clean_output/partition_global.xlsx",  sheet = "Sheet1")
+
+#Color by Rest
+#save as 600 width, 700 height svg file.
+com%>%group_by(Rest,EMC,SF,IMC,ColorRest)%>%summarise(n = sum(freq)) -> community
+par(cex=1, cex.axis=1.5,col = "white",col.axis="black",family = "Avenir")
+alluvial(community[,1:4],freq=community$n,
+         col=community$ColorRest,
+         border = NA, #"white",
+         alpha=0.8,
+         gap.width = 0.2, # vertical gap between modules
+         xw = 0.15, # position of transition (smaller -> sharper)
+         cw = 0.3, # width of each block column
+         blocks=FALSE)
+
+```
+```{r Fig_S1}
+com <- read_excel("../results/clean_output/partition_global.xlsx",  sheet = "Sheet1")
+
+#Color by Rest
+#save as 600 width, 700 height svg file.
+com%>%group_by(Predefined,Rest,EMC,SF,IMC,Colorp)%>%summarise(n = sum(freq)) -> community
+par(cex=1, cex.axis=1.5,col = "black",col.axis="black",family = "Avenir")
+alluvial(community[,1:5],freq=community$n,
+         col=community$Colorp,
+         border = NA, #"white",
+         alpha=0.8,
+         gap.width = 0.2, # vertical gap between modules
+         xw = 0.15, # position of transition (smaller -> sharper)
+         cw = 0.3, # width of each block column
+         blocks=TRUE)
+```
+
+
+```{r Fig_3_c}
+# Manually create the VIn matrix for the global hierarchy
+mat <- matrix(c(
+  0.240, 0, 0.161,
+  0.228, 0.161, 0,
+  0.228, 0.176, 0.139
+), nrow = 3, byrow = TRUE)
+
+# Set the row and column names
+rownames(mat) <- c("EMC", "IMC", "SF")
+colnames(mat) <- c("Rest", "EMC", "IMC")
+
+# Convert the matrix into a long-format data frame for ggplot
+df <- melt(mat)
+colnames(df) <- c("Row", "Column", "Value")
+
+# Convert row and column names to factors with the order in the matrix
+df$Row <- factor(df$Row, levels = rownames(mat))
+df$Column <- factor(df$Column, levels = colnames(mat))
+
+# Keep only the lower triangle, including the diagonal (cells where row >= column)
+df_lower <- subset(df, as.numeric(Row) >= as.numeric(Column))
+
+# Create the heatmap
+p=ggplot(df_lower, aes(x = Column, y = Row, fill = Value)) +
+  geom_tile(color = "black",linewidth=0.3) +  # cell border set to black
+  geom_text(aes(label = sprintf("%.3f", Value)), color = "black", size = 5, family = "Avenir")+
+  scale_fill_distiller(palette = "YlGnBu", limits = c(0.13, 0.33), direction = 1) +
+  scale_y_discrete(limits = rev(levels(df$Row))) +  # flip y-axis order
+  theme_minimal() +
+  labs(x = NULL, y = NULL, fill = "VIn") +
+  theme(axis.text = element_text(size = 16,family="Avenir"),
+        text = element_text(family = "Avenir"),  
+            # Remove background and grid
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.background = element_blank(),
+        legend.position = "right",
+        legend.justification = c(1.5, 0),
+        legend.title = element_text(size = 14))+
+  guides(fill = guide_colorbar(barwidth = 0.8, barheight = 10,
+                               frame.colour = "black", frame.linewidth = 0.3,
+                               ticks.colour = "black", direction = "vertical"))
+
+p
+ggsave("../figures/Fig_3C.jpeg", plot = p, width = 4, height = 3, dpi = 300, bg = "transparent")
+```
+```{r Fig_5}
+btfc_global <- read.csv("../results/clean_output/between_module_FC_global.csv")
+btfc_global$Rest <- NULL
+btfc_global_avg = colMeans(btfc_global, na.rm = TRUE)
+btfc_global_se <- apply(btfc_global, 2, function(x) sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x))))
+colnames = c("Rest","SF","EMC","IMC")
+summary_df <- data.frame(
+  Variable = names(btfc_global),
+  value = btfc_global_avg,
+  se = btfc_global_se,
+  row.names = NULL
+)
+p5 = 
+  ggplot(summary_df) +
+  geom_bar(aes(x=Variable, y=value), stat="identity", fill="#b8ddba", 
+            alpha=1,width=0.8) +
+  geom_errorbar(aes(x=Variable, ymin=value-se, ymax=value+se), width=0.3,
+                 colour="black",alpha=0.7, size=0.6) + 
+  geom_signif(aes(x=Variable,y=value),
+    y_position = c(0.44,0.38), comparisons = list(c("SF", "EMC"),c("EMC","IMC")),
+    annotation = c("italic(p)<0.001","italic(p)==0.004"),  parse=TRUE,
+    tip_length = 0, textsize=3,vjust=0,
+  ) +
+  scale_y_continuous(breaks=seq(0,0.5,by=0.1),limits=c(0,0.47))+
+  labs(x = 'Condition', y = 'Between Module FC') +
+  theme_classic() + 
+  theme(axis.text = element_text(size = 11,family="Avenir"),
+        text = element_text(family = "Avenir",size=12))
+ggsave("../figures/Fig_5.jpeg", plot = p5, width = 2.5, height = 2.5, dpi = 300, bg = "transparent")
+
+```
+
+```{r Fig_S2}
+btfc_global <- read.csv("../results/clean_output/between_module_FC_global.csv")
+btfc_global_avg = colMeans(btfc_global, na.rm = TRUE)
+btfc_global_se <- apply(btfc_global, 2, function(x) sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x))))
+colnames = c("Rest","SF","EMC","IMC")
+summary_df <- data.frame(
+  Variable = names(btfc_global),
+  value = btfc_global_avg,
+  se = btfc_global_se,
+  row.names = NULL
+)
+summary_df$Variable <- factor(summary_df$Variable, levels = c("Rest","EMC","SF","IMC"))
+p5 = 
+  ggplot(summary_df) +
+  geom_bar(aes(x=Variable, y=value), stat="identity", fill="#b8ddba", 
+            alpha=1,width=0.8) +
+  geom_errorbar(aes(x=Variable, ymin=value-se, ymax=value+se), width=0.3,
+                 colour="black",alpha=0.7, size=0.6) + 
+  labs(x = 'Condition', y = 'Between Module FC') +
+  theme_classic() + 
+  theme(axis.text = element_text(size = 11,family="Avenir"),
+        text = element_text(family = "Avenir",size=12))
+ggsave("../figures/Fig_S2.jpeg", plot = p5, width = 3, height = 2.5, dpi = 300, bg = "transparent")
+
+```
+
+```{r Fig_6_A}
+library("alluvial")
+com <- read_excel("../results/clean_output/partition_local.xlsx",  sheet = "Sheet1")
+
+#Color by IMC
+#save as 600 width, 700 height svg file.
+com%>%group_by(Rest,EMC,SF,IMC,ColorIMC)%>%summarise(n = sum(freq)) -> community
+par(cex=1, cex.axis=1.5,col = "white",col.axis="black",family = "Avenir")
+alluvial(community[,1:4],freq=community$n,
+         col=community$ColorIMC,
+         border = NA, #"white",
+         alpha=0.8,
+         gap.width = 0.2, # vertical gap between modules
+         xw = 0.15, # position of transition (smaller -> sharper)
+         cw = 0.3, # width of each block column
+         blocks=FALSE)
+
+```
+```{r Fig_S3}
+com <- read_excel("../results/clean_output/partition_local.xlsx",  sheet = "Sheet1")
+
+#Color by Rest
+#save as 600 width, 700 height svg file.
+com%>%group_by(Predefined,Rest,EMC,SF,IMC,Colorp)%>%summarise(n = sum(freq)) -> community
+par(cex=1, cex.axis=1.5,col = "black",col.axis="black",family = "Avenir")
+alluvial(community[,1:5],freq=community$n,
+         col=community$Colorp,
+         border = "white",
+         alpha=0.8,
+         gap.width = 0.1, # vertical gap between modules
+         xw = 0.15, # position of transition (smaller -> sharper)
+         cw = 0.3, # width of each block column
+         blocks=TRUE)
+```
+
+
+```{r Fig_6_c}
+library(ggplot2)
+library(reshape2)
+
+# Manually create the VIn matrix for the global hierarchy
+mat <- matrix(c(
+  0.312, 0, 0.211,
+  0.318, 0.211, 0,
+  0.324, 0.214, 0.191
+), nrow = 3, byrow = TRUE)
+
+# Set the row and column names
+rownames(mat) <- c("EMC", "IMC", "SF")
+colnames(mat) <- c("Rest", "EMC", "IMC")
+
+# Convert the matrix into a long-format data frame for ggplot
+df <- melt(mat)
+colnames(df) <- c("Row", "Column", "Value")
+
+# Convert row and column names to factors with the order in the matrix
+df$Row <- factor(df$Row, levels = rownames(mat))
+df$Column <- factor(df$Column, levels = colnames(mat))
+
+# Keep only the lower triangle, including the diagonal (cells where row >= column)
+df_lower <- subset(df, as.numeric(Row) >= as.numeric(Column))
+df_lower$text_color <- ifelse(df_lower$Value > 0.25, "white", "black")
+
+# Create the heatmap
+p=ggplot(df_lower, aes(x = Column, y = Row, fill = Value)) +
+  geom_tile(color = "black",linewidth=0.3) +  # cell border set to black
+  geom_text(aes(label = sprintf("%.3f", Value)), color = df_lower$text_color, size = 5, family = "Avenir")+
+  scale_fill_distiller(palette = "YlGnBu", limits = c(0.13, 0.33), direction = 1) +
+  scale_y_discrete(limits = rev(levels(df$Row))) +  # flip y-axis order
+  theme_minimal() +
+  labs(x = NULL, y = NULL, fill = "VIn") +
+  theme(axis.text = element_text(size = 16,family="Avenir"),
+        text = element_text(family = "Avenir"),  
+            # Remove background and grid
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.background = element_blank(),
+        legend.position = "right",
+        legend.justification = c(1.5, 0),
+        legend.title = element_text(size = 14))+
+  guides(fill = guide_colorbar(barwidth = 0.8, barheight = 10,
+                               frame.colour = "black", frame.linewidth = 0.3,
+                               ticks.colour = "black",direction = "vertical"))
+
+p
+ggsave("../figures/Fig_6C.jpeg", plot = p, width = 4, height = 3, dpi = 300, bg = "transparent")
+```
+
+```{r Fig_7}
+btfc_local <- read.csv("../results/clean_output/between_module_FC_local.csv")
+btfc_local$Rest <- NULL
+btfc_local$EMC <- NULL
+btfc_local_avg = colMeans(btfc_local, na.rm = TRUE)
+btfc_local_se <- apply(btfc_local, 2, function(x) sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x))))
+summary_df <- data.frame(
+  Variable = names(btfc_local),
+  value = btfc_local_avg,
+  se = btfc_local_se,
+  row.names = NULL
+)
+p7 = 
+  ggplot(summary_df) +
+  geom_bar(aes(x=Variable, y=value), stat="identity", fill="#b8ddba", 
+            alpha=1,width=0.8) +
+  geom_errorbar(aes(x=Variable, ymin=value-se, ymax=value+se), width=0.3,
+                 colour="black",alpha=0.7, size=0.6) + 
+  geom_signif(aes(x=Variable,y=value),
+    y_position = c(0.44), comparisons = list(c("SF", "IMC")),
+    annotation = c("italic(p)==0.007"),  parse=TRUE,
+    tip_length = 0, textsize=3,vjust=0,
+  ) +
+  scale_y_continuous(breaks=seq(0,0.5,by=0.1),limits=c(0,0.47))+
+  labs(x = 'Condition', y = 'Between Module FC') +
+  theme_classic() + 
+  theme(axis.text = element_text(size = 11,family="Avenir"),
+        text = element_text(family = "Avenir",size=12))
+ggsave("../figures/Fig_7.jpeg", plot = p7, width = 1.6, height = 2, dpi = 300, bg = "transparent")
+
+```
+
+```{r Fig_S4}
+btfc_local <- read.csv("../results/clean_output/between_module_FC_local.csv")
+btfc_local_avg = colMeans(btfc_local, na.rm = TRUE)
+btfc_local_se <- apply(btfc_local, 2, function(x) sd(x, na.rm = TRUE) / sqrt(sum(!is.na(x))))
+summary_df <- data.frame(
+  Variable = names(btfc_local),
+  value = btfc_local_avg,
+  se = btfc_local_se,
+  row.names = NULL
+)
+summary_df$Variable <- factor(summary_df$Variable, levels = c("Rest","EMC","SF","IMC"))
+p7 = 
+  ggplot(summary_df) +
+  geom_bar(aes(x=Variable, y=value), stat="identity", fill="#b8ddba", 
+            alpha=1,width=0.8) +
+  geom_errorbar(aes(x=Variable, ymin=value-se, ymax=value+se), width=0.3,
+                 colour="black",alpha=0.7, size=0.6) + 
+  scale_y_continuous(breaks=seq(0,0.5,by=0.1),limits=c(0,0.47))+
+  labs(x = 'Condition', y = 'Between Module FC') +
+  theme_classic() + 
+  theme(axis.text = element_text(size = 11,family="Avenir"),
+        text = element_text(family = "Avenir",size=12))
+ggsave("../figures/Fig_S4.jpeg", plot = p7, width = 3, height = 2.5, dpi = 300, bg = "transparent")
+
+```

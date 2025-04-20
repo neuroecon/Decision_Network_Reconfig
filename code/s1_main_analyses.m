@@ -211,6 +211,7 @@ load('../results/community_detection/0.1,1,0.1_concat/Subnetwork/partition_local
 density = 0.1;
 load('../results/community_detection/0.1,1,0.1_concat/Subnetwork/partition_local.mat');
 [BetweenFCmean34, BetweenFCsum34, FCall34]= between_mod_FC_2nd(dataDir,ciu2,density, 3, 4);
+BetweenFCmean34(isnan(BetweenFCmean34))=0;
 bar([1:4],nanmean(BetweenFCmean34,1))                
 hold on
 errorbar([1:4],nanmean(BetweenFCmean34,1),...
