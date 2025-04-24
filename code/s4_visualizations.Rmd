@@ -114,11 +114,12 @@ p5 =
   geom_errorbar(aes(x=Variable, ymin=value-se, ymax=value+se), width=0.3,
                  colour="black",alpha=0.7, size=0.6) + 
   geom_signif(aes(x=Variable,y=value),
-    y_position = c(0.44,0.38), comparisons = list(c("SF", "EMC"),c("EMC","IMC")),
+    y_position = c(0.375,0.365), comparisons = list(c("SF", "EMC"),c("EMC","IMC")),
     annotation = c("italic(p)<0.001","italic(p)==0.004"),  parse=TRUE,
     tip_length = 0, textsize=3,vjust=0,
   ) +
-  scale_y_continuous(breaks=seq(0,0.5,by=0.1),limits=c(0,0.47))+
+  scale_y_continuous(breaks=seq(0,0.5,by=0.02),limits = c(0,0.5))+
+  coord_cartesian(ylim = c(0.3, 0.38)) + 
   labs(x = 'Condition', y = 'Between Module FC') +
   theme_classic() + 
   theme(axis.text = element_text(size = 11,family="Avenir"),
@@ -139,17 +140,18 @@ summary_df <- data.frame(
   row.names = NULL
 )
 summary_df$Variable <- factor(summary_df$Variable, levels = c("Rest","EMC","SF","IMC"))
-p5 = 
+ps2 = 
   ggplot(summary_df) +
   geom_bar(aes(x=Variable, y=value), stat="identity", fill="#b8ddba", 
             alpha=1,width=0.8) +
   geom_errorbar(aes(x=Variable, ymin=value-se, ymax=value+se), width=0.3,
                  colour="black",alpha=0.7, size=0.6) + 
+  coord_cartesian(ylim = c(0.3, 0.37)) + 
   labs(x = 'Condition', y = 'Between Module FC') +
   theme_classic() + 
   theme(axis.text = element_text(size = 11,family="Avenir"),
         text = element_text(family = "Avenir",size=12))
-ggsave("../figures/Fig_S2.jpeg", plot = p5, width = 3, height = 2.5, dpi = 300, bg = "transparent")
+ggsave("../figures/Fig_S2.jpeg", plot = ps2, width = 3, height = 2.5, dpi = 300, bg = "transparent")
 
 ```
 
@@ -261,11 +263,12 @@ p7 =
   geom_errorbar(aes(x=Variable, ymin=value-se, ymax=value+se), width=0.3,
                  colour="black",alpha=0.7, size=0.6) + 
   geom_signif(aes(x=Variable,y=value),
-    y_position = c(0.44), comparisons = list(c("SF", "IMC")),
+    y_position = c(0.42), comparisons = list(c("SF", "IMC")),
     annotation = c("italic(p)==0.007"),  parse=TRUE,
     tip_length = 0, textsize=3,vjust=0,
   ) +
-  scale_y_continuous(breaks=seq(0,0.5,by=0.1),limits=c(0,0.47))+
+  scale_y_continuous(breaks=seq(0,0.5,by=0.04),limits = c(0,0.5))+
+  coord_cartesian(ylim = c(0.3, 0.44)) + 
   labs(x = 'Condition', y = 'Between Module FC') +
   theme_classic() + 
   theme(axis.text = element_text(size = 11,family="Avenir"),
