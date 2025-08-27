@@ -20,6 +20,10 @@ subList=[702 705 708 711 718 719 720 722 725 728 729 730 733 735 ...
 736 737 740 744 745 748 750 754 755 758 759 760 761];
 param=[num2str(density),',',num2str(gamma),',',num2str(omega)];
 
+save2dir=[resultDir,'community_detection/',param,'_',mode,'/'];
+if ~exist(save2dir)
+    mkdir(save2dir);
+end
 %community detection
 for sub=1:length(subList)
     % load FC matrix
@@ -62,7 +66,6 @@ for sub=1:length(subList)
 end
 
 % save group level partition
-save2dir=[resultDir,'community_detection/',param,'_',mode,'/'];
 save([save2dir,'S27.mat'],'Sall');
 save([save2dir,'Qall.mat'],'Qall');
     

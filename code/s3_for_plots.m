@@ -1,5 +1,4 @@
 % prepare data for figures
-%% Figure 1 - no data
 %% Figure 2
 % 2A: FC matrix
 % Define cluster sizes and total matrix size
@@ -72,6 +71,4 @@ custom_cmap = [cmap_lower; cmap_upper];
 % Apply the custom colormap and adjust color limits
 colormap(custom_cmap);
 caxis([-1 1]);  % Ensures that -1 maps to the lower_color and 1 to the upper_color
-
-%% Figure 3 - in R
 

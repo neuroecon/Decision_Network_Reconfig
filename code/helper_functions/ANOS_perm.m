@@ -4,12 +4,11 @@ function  [rw,rpw,pvalue]=ANOS_perm(datadir,cond1,cond2,perm)
 
 load([datadir,'/S27.mat']);
 
-subList=1:27;
 n=size(Sall,2);
 rwv1=[];
 rwv2=[];
 for j=1:n
-    for k=j+1:size(Sall,2)
+    for k=j+1:n
         [rwv1(end+1),MIn]=partition_distance(Sall(:,j,cond1),Sall(:,k,cond1));
         [rwv2(end+1),MIn]=partition_distance(Sall(:,j,cond2),Sall(:,k,cond2));
     end
@@ -17,10 +16,11 @@ end
 rw=mean([rwv1 rwv2]);
 
 % permutation
+subList = 1:n;
 for q=1:perm
     rpv=[];
     % choose half of the subjects
-    p = randperm(length(subList),round(length(subList)/2));
+    p = randperm(n,round(n/2));
     permlist=subList(p);
     temp1=Sall(:,:,cond1);
     temp2=Sall(:,:,cond2);

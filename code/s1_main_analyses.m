@@ -68,6 +68,50 @@ disp(['Flexibility of DMN module = ',num2str(round(mean(F_DMN),3)),'+-',num2str(
 F_sensory = Fgrandmean(ciu2(:,1) == 4);
 disp(['Flexibility of Sensory module = ',num2str(round(mean(F_sensory),3)),'+-',num2str(round(std(F_sensory),3))]);
 
+% anova
+factors = [repmat({'Visual'},length(F_visual),1);...
+    repmat({'FP'},length(F_FP),1); repmat({'Sensory'},length(F_sensory),1);...
+    repmat({'DMN'},length(F_DMN),1)];
+y = [F_visual; F_FP; F_sensory; F_DMN];
+[p,t,stats] = anova1(y,factors);
+[results,m,h,gnames] = multcompare(stats);
+tbl = array2table(results,"VariableNames", ...
+    ["Group","Control Group","Lower Limit","Difference","Upper Limit","P-value"]);
+tbl.("Group") = gnames(tbl.("Group"));
+tbl.("Control Group") = gnames(tbl.("Control Group"))
+
+% pairwise comparisons
+[h,p,ci,stats] = ttest2(F_visual,F_FP);
+p = p*6; % bonferroni correction
+cohend = (mean(F_visual) - mean(F_FP))/stats.sd;
+disp(['Visual - FP: T(',num2str(stats.df),')=',num2str(stats.tstat),', p = ',num2str(p),',cohens d =',num2str(cohend)]);
+
+[h,p,ci,stats] = ttest2(F_visual,F_sensory);
+p = p*6; % bonferroni correction
+cohend = (mean(F_visual) - mean(F_sensory))/stats.sd;
+disp(['Visual - Sensory: T(',num2str(stats.df),')=',num2str(stats.tstat),', p = ',num2str(p),',cohens d =',num2str(cohend)]);
+
+[h,p,ci,stats] = ttest2(F_visual,F_DMN);
+p = p*6; % bonferroni correction
+cohend = (mean(F_visual) - mean(F_DMN))/stats.sd;
+disp(['Visual - DMN: T(',num2str(stats.df),')=',num2str(stats.tstat),', p = ',num2str(p),',cohens d =',num2str(cohend)]);
+
+[h,p,ci,stats] = ttest2(F_sensory,F_DMN);
+p = p*6; % bonferroni correction
+cohend = (mean(F_sensory) - mean(F_DMN))/stats.sd;
+disp(['Sensory - DMN: T(',num2str(stats.df),')=',num2str(stats.tstat),', p = ',num2str(p),',cohens d =',num2str(cohend)]);
+
+[h,p,ci,stats] = ttest2(F_sensory,F_FP);
+p = p*6; % bonferroni correction
+cohend = (mean(F_sensory) - mean(F_FP))/stats.sd;
+disp(['Sensory - FP: T(',num2str(stats.df),')=',num2str(stats.tstat),', p = ',num2str(p),',cohens d =',num2str(cohend)]);
+
+[h,p,ci,stats] = ttest2(F_DMN,F_FP);
+p = p*6; % bonferroni correction
+cohend = (mean(F_DMN) - mean(F_FP))/stats.sd;
+disp(['DMN - FP: T(',num2str(stats.df),')=',num2str(stats.tstat),', p = ',num2str(p),',cohens d =',num2str(cohend)]);
+
+
 %% module merge: nodal transition probability
 % from RS FP to others in other conditions
 load('../results/community_detection/0.1,1,0.1_concat/partition.mat');
@@ -156,16 +200,14 @@ errorbar([1:4],mean(BetweenFCmean,1),...
 xticklabels({'Rest','SF','EMC','IMC'});
 hold off
 ylabel('Between Visual and Task-evoked Mean Connectivity');
+
+p=[];
+stats = {};
+cohend = [];
 for i=[2,4]
     [~,p(i),~,stats{i}] = ttest(BetweenFCmean(:,3), BetweenFCmean(:,i));
+    cohend(i) = (mean(BetweenFCmean(:,3)) - mean(BetweenFCmean(:,i)))/stats{i}.sd;
 end
-
-% combine mean SBC condition
-%meannonSBC = mean(BetweenFCmean(:,[2,4]),2);
-%meanSBC = BetweenFCmean(:,3);
-%boxplot([meanSBC, meannonSBC], 'Labels',{'SBC','non-SBC'});
-%ylabel('Between Visual and Task-evoked Mean Connectivity');
-%[tnonsbc, pnonsbc] = ttest(BetweenFCmean(:,3), meannonSBC);
 
 %% local level: network module detection
 
@@ -219,8 +261,14 @@ errorbar([1:4],nanmean(BetweenFCmean34,1),...
 xticklabels({'Rest','SF','EMC','IMC'});
 hold off
 ylabel({'Between module connectivity:','Social/memory & Valuation network'})
+
+p=[];
+stats = {};
+cohend = [];
+
 for i=[1,2,3]
     [~,p(i),~,stats{i}] = ttest(BetweenFCmean34(:,4), BetweenFCmean34(:,i));
+    cohend(i) = (mean(BetweenFCmean(:,3)) - mean(BetweenFCmean(:,i)))/stats{i}.sd;
 end
 
 
